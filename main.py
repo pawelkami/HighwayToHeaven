@@ -17,7 +17,7 @@ Lista punktów budujących autostradę
 highway = []
 
 costHighway = 1.0
-costTurnoffs = 2.0
+costTurnoffs = 4.0
 
 class Point:
     def __init__(self, parent, coord):
@@ -74,7 +74,7 @@ def simulatedAnnealing(R, resolution, temperature):
     neighbours = initPoint.getAllNeighbour(R, cities, resolution)
     workPoint = selectBest(neighbours, cities, highway, costHighway, costTurnoffs)
     k = 0
-    while k < 500:
+    while k < 600:
         newPoint = selectRandom(neighbours)
         fitnessWork = fitnessFunction(workPoint, cities, highway, costHighway, costTurnoffs)
         fitnessNew = fitnessFunction(newPoint, cities, highway, costHighway, costTurnoffs)
@@ -155,7 +155,7 @@ def selectBest(points, cities, highway, costHighway, costTurnoffs):
 def main():
     # wyświetlanie otoczki wypukłej
     global cities
-    cities = numpy.random.rand(6, 2)
+    cities = numpy.random.rand(14, 2)
     hull = ConvexHull(cities)
     plt.plot(cities[:,0], cities[:,1], 'o')
 
@@ -173,17 +173,21 @@ def main():
 
     #neighbor = point.getAllNeighbour(0.05, cities, 0.01)
 
-    simulatedAnnealing(0.2, 0.05, 5.0)
+    simulatedAnnealing(0.3, 0.1, 0.5)
     # x_list = [x for  in neighbor ]
     # y_list = [y for [x, y] in neighbor]
-    x_list = []
-    y_list = []
 
     for n in highway:
+        x_list = []
+        y_list = []
+        if n.parent != None:
+            x_list.append(n.parent.coord[0])
+            y_list.append(n.parent.coord[1])
         x_list.append(n.coord[0])
         y_list.append(n.coord[1])
 
-    plt.plot(x_list, y_list, "o")
+        plt.plot(x_list, y_list)
+
     plt.show()
 
 
