@@ -4,42 +4,55 @@ import sys
 from scipy.spatial import ConvexHull
 import numpy
 import matplotlib.pyplot as plt
-
+import math
+import random
+'''
+Lista współrzędnych miast
+'''
 cities = []
 
-def getRandomPointFromCircle(point, R, resolution,  hull):
-    result = []
-    for i in reversed(range(1, (int)(36 * R/resolution))):
-        theta = 2.0 * ((float)(i) / (int)(36 * R/resolution)) * numpy.pi
-        print theta
-        x = R * numpy.cos(theta) + point[0]
-        y = R * numpy.sin(theta) + point[1]
-        if inHull([x, y], hull):
-            result.append([x, y])
-    return result
-
-
-def getAllNeighbour(point, R, hull, resolution):
-    neighbour = []
-    for x in numpy.arange(resolution, R, resolution):
-        neighbour.extend(getRandomPointFromCircle(point, x, resolution, hull))
-    return neighbour
-
 '''
-Losowy punkt sąsiadujący z punktem point, leżący w promieniu R od niego i znajdujący się w podanej otoczce wypukłej
+Lista punktów budujących autostradę
 '''
-def getRandomPointNeighbour(point, R, hull):
-    while True:
-        p = getRandomPointFromCircle(point, R, hull)
-        # if inHull(p, hull):
-        return p
+highway = []
+
+costHighway = 1.0
+costTurnoffs = 2.0
+
+class Point:
+    def __init__(self, parent, coord):
+        self.parent = parent
+        self.coord = coord
+
+    def getRandomPointFromCircle(self, R, resolution,  hull):
+        result = []
+        for i in reversed(range(1, (int)(36 * R/resolution))):
+            theta = 2.0 * ((float)(i) / (int)(36 * R/resolution)) * numpy.pi
+            x = R * numpy.cos(theta) + self.coord[0]
+            y = R * numpy.sin(theta) + self.coord[1]
+            if inHull([x,y], hull):
+                result.append(Point(self, [x, y]))
+        return result
+
+
+    def getAllNeighbour(self, R, hull, resolution):
+        neighbour = []
+        for x in numpy.arange(resolution, R, resolution):
+            neighbour.extend(self.getRandomPointFromCircle(x, resolution, hull))
+        return neighbour
+
+    def calcLength(self):
+        if self.parent == None:
+            return 0.0
+
+        return math.hypot(self.coord[0] - self.parent.coord[0], self.coord[1] - self.parent.coord[1])
 
 
 def getRandomPointFromHull(hull):
     while True:
         point = numpy.random.rand(1,2)
-        if(inHull(point, hull)):
-            return point
+        if(inHull(point[0], hull)):
+            return Point(None, point[0])
 
 def inHull(p ,hull):
     from scipy.spatial import Delaunay
@@ -51,51 +64,129 @@ def inHull(p ,hull):
 '''
 Funkcja szukająca optymalnego rozwiązania - symulowane wyżarzanie
 '''
-def simulatedAnnealing():
+def simulatedAnnealing(R, resolution, temperature):
     initPoint = getRandomPointFromHull(cities)
+    global highway
+    global cities
+    global costHighway
+    global costTurnoffs
+    highway.append(initPoint)
+    neighbours = initPoint.getAllNeighbour(R, cities, resolution)
+    workPoint = selectBest(neighbours, cities, highway, costHighway, costTurnoffs)
+    k = 0
+    while k < 1000:
+        newPoint = selectRandom(neighbours)
+        fitnessWork = fitnessFunction(workPoint, cities, highway, costHighway, costTurnoffs)
+        fitnessNew = fitnessFunction(newPoint, cities, highway, costHighway, costTurnoffs)
+        if fitnessWork > fitnessNew:
+            workPoint = newPoint
+            neighbours.append(workPoint.getAllNeighbour(R, cities, resolution))
+            neighbours.remove(workPoint)
+            highway.append(workPoint)
+        elif numpy.random.uniform() < probability(fitnessWork, fitnessNew, temperature):
+            workPoint = newPoint
+            neighbours.append(workPoint.getAllNeighbour(R, cities, resolution))
+            neighbours.remove(workPoint)
+            highway.append(workPoint)
 
-    return
+        k += 1
+
+
+def selectRandom(neighbours):
+    return random.choice(neighbours)
+
+def probability(fitnessWork, fitnessNew, temperature):
+    return math.exp( - abs(fitnessWork - fitnessNew) / temperature)
 
 '''
 Funkcja celu:
 F=c*S + z * Suma Li
 
-c- współczynnik wagi całkowitej długości autostrady
+costHighway - współczynnik wagi całkowitej długości autostrady
 S - długość zbudowanej dotychczas autostrady
-z - współczynnik wagi odległości zjazdu od miasta
+costTurnoffs - współczynnik wagi odległości zjazdu od miasta
 Li - odległość i-tego miasta od najbliższego zjazdu
 N - liczba miast
 '''
-def fitnessFunction():
-    return
+def fitnessFunction(point, cities, highway, costHighway, costTurnoffs):
+    return costHighway * findHighwayLength(highway) + costTurnoffs * findTurnoffs(cities, highway)
+
+def calcLengthBetweenTwoPoints(point1, point2):
+    return math.hypot(point2[0]-point1[0], point2[1]-point1[1])
+
+def findTurnoffs(cities, highway):
+    length = 0.0
+    for city in cities:
+        length += findNearestTurnoffDistance(city, highway)
+
+    return length
+
+def findNearestTurnoffDistance(city, highway):
+    minDistance = float("inf")
+    for turnoff in highway:
+        tempDist = calcLengthBetweenTwoPoints(city, turnoff.coord)
+        if tempDist < minDistance:
+            minDistance = tempDist
+
+    return minDistance
+
+def findHighwayLength(highway):
+    length = 0.0
+    for h in highway:
+        length += h.calcLength()
+
+    return length
+
+
+def selectBest(points, cities, highway, costHighway, costTurnoffs):
+    bestValue = float("inf")
+    bestPoint = points[0]
+
+    for p in points:
+        fitness = fitnessFunction(p, cities, highway, costHighway, costTurnoffs)
+        if fitness < bestValue:
+            bestValue = fitness
+            bestPoint = p
+
+    return bestPoint
+
+
 
 def main():
     # wyświetlanie otoczki wypukłej
-    cities = numpy.random.rand(30, 2)
-    # hull = ConvexHull(cities)
-    # plt.plot(cities[:,0], cities[:,1], 'o')
-    #
-    # for simplex in hull.simplices:
-    #     plt.plot(cities[simplex, 0], cities[simplex,1], "k-")
-    #
-    # plt.plot(cities[hull.vertices, 0], cities[hull.vertices, 1], 'r--', lw=2)
-    # plt.plot(cities[hull.vertices[0], 0], cities[hull.vertices[0], 1], 'ro')
+    global cities
+    cities = numpy.random.rand(15, 2)
+    hull = ConvexHull(cities)
+    plt.plot(cities[:,0], cities[:,1], 'o')
+
+    for simplex in hull.simplices:
+        plt.plot(cities[simplex, 0], cities[simplex,1], "k-")
+
+    plt.plot(cities[hull.vertices, 0], cities[hull.vertices, 1], 'r--', lw=2)
+    plt.plot(cities[hull.vertices[0], 0], cities[hull.vertices[0], 1], 'ro')
     # plt.show()
 
-    point = numpy.random.rand(1, 2)
-    print point
+
+    #point = Point(None, numpy.random.rand(1, 2)[0])
+
     #print getRandomPointNeighbour(point[0], 0.1, cities)
 
-    neighbor = getAllNeighbour(point[0], 0.2, cities, 0.05)
+    #neighbor = point.getAllNeighbour(0.05, cities, 0.01)
 
-    x_list = [x for [x, y] in neighbor]
-    y_list = [y for [x, y] in neighbor]
+    simulatedAnnealing(0.05, 0.01, 0.82)
+    # x_list = [x for  in neighbor ]
+    # y_list = [y for [x, y] in neighbor]
+    x_list = []
+    y_list = []
 
-    plt.plot(x_list, y_list, 'o')
+    for n in highway:
+        x_list.append(n.coord[0])
+        y_list.append(n.coord[1])
+
+    plt.plot(x_list, y_list)
     plt.show()
 
 
-    print neighbor
 
 if __name__ == "__main__":
     main()
