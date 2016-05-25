@@ -65,27 +65,27 @@ def inHull(p ,hull):
 Funkcja szukająca optymalnego rozwiązania - symulowane wyżarzanie
 '''
 def simulatedAnnealing(R, resolution, temperature):
-    initPoint = getRandomPointFromHull(cities)
-    global highway
     global cities
+    global highway
     global costHighway
     global costTurnoffs
+    initPoint = getRandomPointFromHull(cities)
     highway.append(initPoint)
     neighbours = initPoint.getAllNeighbour(R, cities, resolution)
     workPoint = selectBest(neighbours, cities, highway, costHighway, costTurnoffs)
     k = 0
-    while k < 1000:
+    while k < 500:
         newPoint = selectRandom(neighbours)
         fitnessWork = fitnessFunction(workPoint, cities, highway, costHighway, costTurnoffs)
         fitnessNew = fitnessFunction(newPoint, cities, highway, costHighway, costTurnoffs)
         if fitnessWork > fitnessNew:
             workPoint = newPoint
-            neighbours.append(workPoint.getAllNeighbour(R, cities, resolution))
+            neighbours.extend(workPoint.getAllNeighbour(R, cities, resolution))
             neighbours.remove(workPoint)
             highway.append(workPoint)
         elif numpy.random.uniform() < probability(fitnessWork, fitnessNew, temperature):
             workPoint = newPoint
-            neighbours.append(workPoint.getAllNeighbour(R, cities, resolution))
+            neighbours.extend(workPoint.getAllNeighbour(R, cities, resolution))
             neighbours.remove(workPoint)
             highway.append(workPoint)
 
@@ -155,7 +155,7 @@ def selectBest(points, cities, highway, costHighway, costTurnoffs):
 def main():
     # wyświetlanie otoczki wypukłej
     global cities
-    cities = numpy.random.rand(15, 2)
+    cities = numpy.random.rand(6, 2)
     hull = ConvexHull(cities)
     plt.plot(cities[:,0], cities[:,1], 'o')
 
@@ -173,7 +173,7 @@ def main():
 
     #neighbor = point.getAllNeighbour(0.05, cities, 0.01)
 
-    simulatedAnnealing(0.05, 0.01, 0.82)
+    simulatedAnnealing(0.2, 0.05, 5.0)
     # x_list = [x for  in neighbor ]
     # y_list = [y for [x, y] in neighbor]
     x_list = []
@@ -183,7 +183,7 @@ def main():
         x_list.append(n.coord[0])
         y_list.append(n.coord[1])
 
-    plt.plot(x_list, y_list)
+    plt.plot(x_list, y_list, "o")
     plt.show()
 
 
