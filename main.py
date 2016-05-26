@@ -17,7 +17,7 @@ Lista punktów budujących autostradę
 highway = []
 
 costHighway = 1.0
-costTurnoffs = 4.0
+costTurnoffs = 1.0
 
 class Point:
     def __init__(self, parent, coord):
@@ -109,7 +109,9 @@ Li - odległość i-tego miasta od najbliższego zjazdu
 N - liczba miast
 '''
 def fitnessFunction(point, cities, highway, costHighway, costTurnoffs):
-    return costHighway * findHighwayLength(highway) + costTurnoffs * findTurnoffs(cities, highway)
+    tempHighway = list(highway)
+    tempHighway.append(point)
+    return costHighway * findHighwayLength(tempHighway) + costTurnoffs * findTurnoffs(cities, tempHighway)
 
 def calcLengthBetweenTwoPoints(point1, point2):
     return math.hypot(point2[0]-point1[0], point2[1]-point1[1])
@@ -173,7 +175,7 @@ def main():
 
     #neighbor = point.getAllNeighbour(0.05, cities, 0.01)
 
-    simulatedAnnealing(0.3, 0.1, 0.5)
+    simulatedAnnealing(0.5, 0.1, 0.001)
     # x_list = [x for  in neighbor ]
     # y_list = [y for [x, y] in neighbor]
 
