@@ -17,7 +17,7 @@ Lista punktów budujących autostradę
 highway = []
 
 costHighway = 1.0
-costTurnoffs = 1.0
+costTurnoffs = 1.5
 
 class Point:
     def __init__(self, parent, coord):
@@ -64,7 +64,7 @@ def inHull(p ,hull):
 '''
 Funkcja szukająca optymalnego rozwiązania - symulowane wyżarzanie
 '''
-def simulatedAnnealing(R, resolution, temperature):
+def simulatedAnnealing(R, resolution, temperature, iterations):
     global cities
     global highway
     global costHighway
@@ -74,17 +74,19 @@ def simulatedAnnealing(R, resolution, temperature):
     neighbours = initPoint.getAllNeighbour(R, cities, resolution)
     workPoint = selectBest(neighbours, cities, highway, costHighway, costTurnoffs)
     k = 0
-    while k < 600:
-        newPoint = selectRandom(neighbours)
+    while k < iterations:
+        #newPoint = selectRandom(workPoint.getAllNeighbour(R,cities,resolution))
+        newPoint = selectBest(workPoint.getAllNeighbour(R,cities,resolution),cities,highway,costHighway,costTurnoffs)
         fitnessWork = fitnessFunction(workPoint, cities, highway, costHighway, costTurnoffs)
         fitnessNew = fitnessFunction(newPoint, cities, highway, costHighway, costTurnoffs)
         if fitnessWork > fitnessNew:
             workPoint = newPoint
             neighbours.extend(workPoint.getAllNeighbour(R, cities, resolution))
-            neighbours.remove(workPoint)
+            #neighbours.remove(workPoint)
             highway.append(workPoint)
         elif numpy.random.uniform() < probability(fitnessWork, fitnessNew, temperature):
-            workPoint = newPoint
+            #workPoint = newPoint
+            workPoint = selectRandom(neighbours)
             neighbours.extend(workPoint.getAllNeighbour(R, cities, resolution))
             neighbours.remove(workPoint)
             highway.append(workPoint)
@@ -152,32 +154,15 @@ def selectBest(points, cities, highway, costHighway, costTurnoffs):
 
     return bestPoint
 
-
-
-def main():
-    # wyświetlanie otoczki wypukłej
-    global cities
-    cities = numpy.random.rand(14, 2)
+def drawPlot(R, resolution, temperature, iterations):
     hull = ConvexHull(cities)
-    plt.plot(cities[:,0], cities[:,1], 'o')
+    plt.plot(cities[:, 0], cities[:, 1], 'o')
 
     for simplex in hull.simplices:
-        plt.plot(cities[simplex, 0], cities[simplex,1], "k-")
+        plt.plot(cities[simplex, 0], cities[simplex, 1], "k-")
 
     plt.plot(cities[hull.vertices, 0], cities[hull.vertices, 1], 'r--', lw=2)
     plt.plot(cities[hull.vertices[0], 0], cities[hull.vertices[0], 1], 'ro')
-    # plt.show()
-
-
-    #point = Point(None, numpy.random.rand(1, 2)[0])
-
-    #print getRandomPointNeighbour(point[0], 0.1, cities)
-
-    #neighbor = point.getAllNeighbour(0.05, cities, 0.01)
-
-    simulatedAnnealing(0.5, 0.1, 0.001)
-    # x_list = [x for  in neighbor ]
-    # y_list = [y for [x, y] in neighbor]
 
     for n in highway:
         x_list = []
@@ -190,7 +175,21 @@ def main():
 
         plt.plot(x_list, y_list)
 
+    plt.title("fitness = " + str(fitnessFunction(highway[-1], cities, highway, costHighway, costTurnoffs)))
+    plt.savefig("plot-" + "iter" + str(iterations) + "-temp" + str(temperature) + "-R" + str(R) + "-resolution" + str(resolution) + ".png")
     plt.show()
+
+def main():
+    global cities
+    cities = numpy.random.rand(10, 2)
+
+    R = 0.05
+    resolution = 0.01
+    temperature = 0.001
+    iterations = 400
+
+    simulatedAnnealing(R, resolution, temperature, iterations)
+    drawPlot(R, resolution, temperature, iterations)
 
 
 
