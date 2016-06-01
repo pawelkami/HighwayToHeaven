@@ -16,8 +16,8 @@ Lista punktów budujących autostradę
 '''
 highway = []
 
-costHighway = 1.0
-costTurnoffs = 1.5
+costHighway = 3.0
+costTurnoffs = 2.8
 
 class Point:
     def __init__(self, parent, coord):
@@ -75,8 +75,8 @@ def simulatedAnnealing(R, resolution, temperature, iterations):
     workPoint = selectBest(neighbours, cities, highway, costHighway, costTurnoffs)
     k = 0
     while k < iterations:
-        #newPoint = selectRandom(workPoint.getAllNeighbour(R,cities,resolution))
-        newPoint = selectBest(workPoint.getAllNeighbour(R,cities,resolution),cities,highway,costHighway,costTurnoffs)
+        # newPoint = selectRandom(workPoint.getAllNeighbour(R,cities,resolution))
+        newPoint = selectBest(neighbours,cities,highway,costHighway,costTurnoffs)
         fitnessWork = fitnessFunction(workPoint, cities, highway, costHighway, costTurnoffs)
         fitnessNew = fitnessFunction(newPoint, cities, highway, costHighway, costTurnoffs)
         if fitnessWork > fitnessNew:
@@ -183,10 +183,10 @@ def main():
     global cities
     cities = numpy.random.rand(10, 2)
 
-    R = 0.05
-    resolution = 0.01
-    temperature = 0.001
-    iterations = 400
+    R = 0.005
+    resolution = 0.001
+    temperature = 0.01
+    iterations = 50
 
     simulatedAnnealing(R, resolution, temperature, iterations)
     drawPlot(R, resolution, temperature, iterations)
