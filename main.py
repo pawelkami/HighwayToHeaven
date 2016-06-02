@@ -6,6 +6,7 @@ import numpy
 import matplotlib.pyplot as plt
 import math
 import random
+import time
 '''
 Lista współrzędnych miast
 '''
@@ -165,7 +166,7 @@ def selectBest(points, cities, highway, costHighway, costTurnoffs):
 
     return bestPoint
 
-def drawPlot(R, resolution, temperature, iterations):
+def drawPlot(R, resolution, temperature, iterations, timeElapsed):
     hull = ConvexHull(cities)
     plt.plot(cities[:, 0], cities[:, 1], 'o')
 
@@ -196,7 +197,7 @@ def drawPlot(R, resolution, temperature, iterations):
         y_list.append(point.coord[1])
         plt.plot(x_list, y_list, 'go')
         
-    plt.title("fitness = " + str(fitnessFunction(highway[-1], cities, highway, costHighway, costTurnoffs)))
+    plt.title("fitness = " + str(fitnessFunction(highway[-1], cities, highway, costHighway, costTurnoffs)) + str(" time = " + str(timeElapsed)))
     plt.savefig("plot-" + "iter" + str(iterations) + "-temp" + str(temperature) + "-R" + str(R) + "-resolution" + str(resolution) + ".png")
     #plt.show()
 
@@ -204,15 +205,17 @@ def main():
     global cities
     cities = numpy.random.rand(10, 2)
 
-    R = [0.005, 0.005, 0.005]
-    resolution = [0.001, 0.001, 0.001]
-    temperature = [0.01, 0.1, 0.2, 0.5]
-    iterations = [250, 450, 550]
+    R = [0.005, 0.005, 0.005, 0.005, 0.005]
+    resolution = [0.001, 0.001, 0.001, 0.001, 0.001]
+    temperature = [0.01, 0.05, 0.2, 0.5, 1.0]
+    iterations = [10, 250, 300, 400, 500]
 
     for i in range(0, len(R)):
         highway = []
+        start = time.time()
         simulatedAnnealing(R[i], resolution[i], temperature[i], iterations[i])
-        drawPlot(R[i], resolution[i], temperature[i], iterations[i])
+        end = time.time()
+        drawPlot(R[i], resolution[i], temperature[i], iterations[i], end-start)
 
 
 
