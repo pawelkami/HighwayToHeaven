@@ -75,6 +75,7 @@ def simulatedAnnealing(R, resolution, temperature, iterations):
     workPoint = selectBest(neighbours, cities, highway, costHighway, costTurnoffs)
     k = 0
     while k < iterations:
+        print k
         #newPoint = selectRandom(workPoint.getAllNeighbour(R,cities,resolution))
         newPoint = selectBest(workPoint.getAllNeighbour(R,cities,resolution),cities,highway,costHighway,costTurnoffs)
         fitnessWork = fitnessFunction(workPoint, cities, highway, costHighway, costTurnoffs)
@@ -134,6 +135,16 @@ def findNearestTurnoffDistance(city, highway):
 
     return minDistance
 
+def findNearestTurnoffPoint(city, highway):
+    minDistance = float("inf")
+    point = city
+    for turnoff in highway:
+        tempDist = calcLengthBetweenTwoPoints(city, turnoff.coord)
+        if tempDist < minDistance:
+            minDistance = tempDist
+            point = turnoff
+    return point
+
 def findHighwayLength(highway):
     length = 0.0
     for h in highway:
@@ -164,6 +175,7 @@ def drawPlot(R, resolution, temperature, iterations):
     plt.plot(cities[hull.vertices, 0], cities[hull.vertices, 1], 'r--', lw=2)
     plt.plot(cities[hull.vertices[0], 0], cities[hull.vertices[0], 1], 'ro')
 
+    #rysowanie calej autostrady
     for n in highway:
         x_list = []
         y_list = []
@@ -175,6 +187,15 @@ def drawPlot(R, resolution, temperature, iterations):
 
         plt.plot(x_list, y_list)
 
+    # wyswietlanie najblizszych zjazdow
+    for city in cities:
+        x_list = []
+        y_list = []
+        point = findNearestTurnoffPoint(city, highway)
+        x_list.append(point.coord[0])
+        y_list.append(point.coord[1])
+        plt.plot(x_list, y_list, 'go')
+        
     plt.title("fitness = " + str(fitnessFunction(highway[-1], cities, highway, costHighway, costTurnoffs)))
     plt.savefig("plot-" + "iter" + str(iterations) + "-temp" + str(temperature) + "-R" + str(R) + "-resolution" + str(resolution) + ".png")
     plt.show()
@@ -186,7 +207,7 @@ def main():
     R = 0.05
     resolution = 0.01
     temperature = 0.001
-    iterations = 400
+    iterations = 100
 
     simulatedAnnealing(R, resolution, temperature, iterations)
     drawPlot(R, resolution, temperature, iterations)
