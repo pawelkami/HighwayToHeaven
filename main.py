@@ -78,7 +78,7 @@ def simulatedAnnealing(R, resolution, temperature, iterations):
     while k < iterations:
         print k
         # newPoint = selectRandom(workPoint.getAllNeighbour(R,cities,resolution))
-        newPoint = selectBest(neighbours,cities,highway,costHighway,costTurnoffs)
+        newPoint = selectBest(workPoint.getAllNeighbour(R, cities, resolution),cities,highway,costHighway,costTurnoffs)
         fitnessWork = fitnessFunction(workPoint, cities, highway, costHighway, costTurnoffs)
         fitnessNew = fitnessFunction(newPoint, cities, highway, costHighway, costTurnoffs)
         if fitnessWork > fitnessNew:
@@ -196,7 +196,7 @@ def drawPlot(R, resolution, temperature, iterations, timeElapsed):
         x_list.append(point.coord[0])
         y_list.append(point.coord[1])
         plt.plot(x_list, y_list, 'go')
-        
+
     plt.title("fitness = " + str(fitnessFunction(highway[-1], cities, highway, costHighway, costTurnoffs)) + str(" time = " + str(timeElapsed)))
     plt.savefig("plot-" + "iter" + str(iterations) + "-temp" + str(temperature) + "-R" + str(R) + "-resolution" + str(resolution) + ".png")
     #plt.show()
@@ -208,7 +208,7 @@ def main():
     R = [0.005, 0.005, 0.005, 0.005, 0.005]
     resolution = [0.001, 0.001, 0.001, 0.001, 0.001]
     temperature = [0.01, 0.05, 0.2, 0.5, 1.0]
-    iterations = [10, 250, 300, 400, 500]
+    iterations = [1000, 2000, 3000, 4000, 5000]
 
     for i in range(0, len(R)):
         highway = []
@@ -221,4 +221,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
