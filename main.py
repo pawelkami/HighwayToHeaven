@@ -205,13 +205,13 @@ def main():
     global cities
     cities = numpy.random.rand(10, 2)
 
-    R = [0.005, 0.005, 0.005, 0.005, 0.005]
-    resolution = [0.001, 0.001, 0.001, 0.001, 0.001]
-    temperature = [0.01, 0.05, 0.2, 0.5, 1.0]
-    iterations = [1000, 2000, 3000, 4000, 5000]
+    R = [0.005, 0.005, 0.005, 0.005, 0.005, 0.005, 0.005]
+    resolution = [0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
+    temperature = [0.01, 0.05, 0.2, 0.5, 1.0, 1.0, 0.7]
+    iterations = [1000, 2000, 3000, 4000, 5000, 6000, 7000]
 
     for i in range(0, len(R)):
-        highway = []
+        highway[:] = []
         start = time.time()
         simulatedAnnealing(R[i], resolution[i], temperature[i], iterations[i])
         end = time.time()
